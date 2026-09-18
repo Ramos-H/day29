@@ -1,0 +1,40 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  config:
+    import: "optional:configserver:http://localhost:8888"
+  cloud:
+    gateway:
+      routes:
+        - id: standing-order-service
+          uri: lb://standing-order-service
+          predicates:
+            - Path=/standing-orders/**
+        - id: execution-service
+          uri: lb://execution-service
+          predicates:
+            - Path=/executions/**
+        - id: payment-service-transfers
+          uri: lb://payment-service
+          predicates:
+            - Path=/transfers/**
+        - id: payment-service-accounts
+          uri: lb://payment-service
+          predicates:
+            - Path=/accounts/**
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/notifications/**
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true

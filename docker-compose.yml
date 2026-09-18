@@ -1,0 +1,120 @@
+version: '3.8'
+
+services:
+  eureka-server:
+    build:
+      context: ./eureka-server
+      dockerfile: Dockerfile
+    container_name: ewb-eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - ewb-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8761/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  config-server:
+    build:
+      context: ./config-server
+      dockerfile: Dockerfile
+    container_name: ewb-config-server
+    ports:
+      - "8888:8888"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    depends_on:
+      - eureka-server
+    networks:
+      - ewb-net
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: ewb-api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+    depends_on:
+      - eureka-server
+      - config-server
+    networks:
+      - ewb-net
+
+  payment-service:
+    build:
+      context: ./payment-service
+      dockerfile: Dockerfile
+    container_name: ewb-payment-service
+    ports:
+      - "8083:8083"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+    depends_on:
+      - eureka-server
+      - config-server
+    networks:
+      - ewb-net
+
+  standing-order-service:
+    build:
+      context: ./standing-order-service
+      dockerfile: Dockerfile
+    container_name: ewb-standing-order-service
+    ports:
+      - "8081:8081"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+    depends_on:
+      - eureka-server
+      - config-server
+    networks:
+      - ewb-net
+
+  execution-service:
+    build:
+      context: ./execution-service
+      dockerfile: Dockerfile
+    container_name: ewb-execution-service
+    ports:
+      - "8082:8082"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      - APP_SERVICES_STANDING_ORDER_URL=http://standing-order-service:8081
+      - APP_SERVICES_PAYMENT_URL=http://payment-service:8083
+      - APP_SERVICES_NOTIFICATION_URL=http://notification-service:8084
+    depends_on:
+      - eureka-server
+      - config-server
+      - standing-order-service
+      - payment-service
+    networks:
+      - ewb-net
+
+  notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    container_name: ewb-notification-service
+    ports:
+      - "8084:8084"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+    depends_on:
+      - eureka-server
+      - config-server
+    networks:
+      - ewb-net
+
+networks:
+  ewb-net:
+    driver: bridge

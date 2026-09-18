@@ -1,0 +1,23 @@
+server:
+  port: 8080
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: standing-order-service
+          uri: lb://standing-order-service
+          predicates:
+            - Path=/standing-orders/**
+        - id: execution-service
+          uri: lb://execution-service
+          predicates:
+            - Path=/executions/**
+        - id: payment-service
+          uri: lb://payment-service
+          predicates:
+            - Path=/transfers/**, /accounts/**
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/notifications/**

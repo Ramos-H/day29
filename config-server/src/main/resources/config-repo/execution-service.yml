@@ -1,0 +1,23 @@
+server:
+  port: 8082
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:executiondb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driverClassName: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+  h2:
+    console:
+      enabled: true
+
+app:
+  services:
+    standing-order-url: http://localhost:8081
+    payment-url: http://localhost:8083
+    notification-url: http://localhost:8084
